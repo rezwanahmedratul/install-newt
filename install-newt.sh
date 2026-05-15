@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/bin/sh
 
 # ==============================================================================
-# Newt Installer for Pangolin
+# Newt Universal Installer for Pangolin
 # ==============================================================================
 # This script automates the installation of the Newt client, configures
 # credentials, and sets up a system service (systemd or OpenRC).
@@ -15,29 +15,32 @@ GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}====================================================${NC}"
-echo -e "${BLUE}          Newt Installation Script                  ${NC}"
-echo -e "${BLUE}====================================================${NC}"
+echo "===================================================="
+echo "          Newt Installation Script                  "
+echo "===================================================="
 
 # Check for root privileges
-if [ "$EUID" -ne 0 ]; then
-  echo -e "${RED}Please run as root (use sudo).${NC}"
+if [ "$(id -u)" -ne 0 ]; then
+  echo "Please run as root (use sudo)."
   exit 1
 fi
 
 # -------------------------
-# Get Credentials (Handles curl | bash stdin issues)
+# Get Credentials (Handles curl | sh stdin issues)
 # -------------------------
-echo -e "\n${BLUE}--- Configuration ---${NC}"
+echo ""
+echo "--- Configuration ---"
 
 # Function to read input safely from terminal
 prompt_input() {
-    local prompt_text=$1
-    local var_name=$2
-    if [ -z "${!var_name}" ]; then
-        # Read from /dev/tty to allow interaction when piped to bash
-        echo -n "$prompt_text" > /dev/tty
-        read -r "$var_name" < /dev/tty
+    prompt_text=$1
+    var_name=$2
+    eval current_val=\$$var_name
+    if [ -z "$current_val" ]; then
+        # Read from /dev/tty to allow interaction when piped to sh
+        printf "%s" "$prompt_text" > /dev/tty
+        read -r input_val < /dev/tty
+        eval "$var_name=\$input_val"
     fi
 }
 
@@ -46,41 +49,46 @@ prompt_input "Enter Newt Secret: " NEWT_SECRET
 prompt_input "Enter Pangolin Endpoint (e.g., https://your-pangolin.com): " PANGOLIN_ENDPOINT
 
 # Validate input
-if [[ -z "$NEWT_ID" || -z "$NEWT_SECRET" || -z "$PANGOLIN_ENDPOINT" ]]; then
-    echo -e "${RED}Error: ID, Secret, and Endpoint are required.${NC}"
+if [ -z "$NEWT_ID" ] || [ -z "$NEWT_SECRET" ] || [ -z "$PANGOLIN_ENDPOINT" ]; then
+    echo "Error: ID, Secret, and Endpoint are required."
     exit 1
 fi
 
 # -------------------------
 # Install dependencies
 # -------------------------
-echo -e "\n${BLUE}[1/5] Installing dependencies...${NC}"
-if command -v apt-get >/dev/null 2>&1; then
+echo ""
+echo "[1/5] Installing dependencies..."
+if command -v apk >/dev/null 2>&1; then
+    apk update && apk add curl bash sudo
+elif command -v apt-get >/dev/null 2>&1; then
     apt-get update && apt-get install -y curl bash sudo
 elif command -v dnf >/dev/null 2>&1; then
     dnf install -y curl bash sudo
 elif command -v pacman >/dev/null 2>&1; then
     pacman -S --noconfirm curl bash sudo
 else
-    echo -e "${RED}Unsupported OS/Package Manager.${NC}"
+    echo "Unsupported OS/Package Manager."
     exit 1
 fi
 
 # -------------------------
 # Install Newt
 # -------------------------
-echo -e "\n${BLUE}[2/5] Installing Newt...${NC}"
+echo ""
+echo "[2/5] Installing Newt..."
 curl -fsSL https://static.pangolin.net/get-newt.sh | bash
 
 if ! command -v newt >/dev/null 2>&1; then
-    echo -e "${RED}ERROR: Newt installation failed.${NC}"
+    echo "ERROR: Newt installation failed."
     exit 1
 fi
 
 # -------------------------
 # Create Config
 # -------------------------
-echo -e "\n${BLUE}[3/5] Creating config...${NC}"
+echo ""
+echo "[3/5] Creating config..."
 CONF_DIR="/etc/newt"
 mkdir -p "$CONF_DIR"
 chmod 700 "$CONF_DIR"
@@ -93,12 +101,13 @@ cat <<EOF > "$CONF_DIR/config.json"
 }
 EOF
 chmod 600 "$CONF_DIR/config.json"
-echo -e "${GREEN}Config saved to $CONF_DIR/config.json${NC}"
+echo "Config saved to $CONF_DIR/config.json"
 
 # -------------------------
 # Set up Service
 # -------------------------
-echo -e "\n${BLUE}[4/5] Setting up service...${NC}"
+echo ""
+echo "[4/5] Setting up service..."
 
 if [ -f /sbin/openrc ] || command -v rc-service >/dev/null 2>&1; then
     # OpenRC (Alpine, etc.)
@@ -118,7 +127,7 @@ EOF
     chmod +x /etc/init.d/newt
     rc-update add newt default >/dev/null 2>&1 || true
     rc-service newt restart || rc-service newt start
-    echo -e "${GREEN}OpenRC service configured and started.${NC}"
+    echo "OpenRC service configured and started."
 
 elif command -v systemctl >/dev/null 2>&1; then
     # Systemd
@@ -142,16 +151,17 @@ EOF
     systemctl daemon-reload
     systemctl enable newt
     systemctl restart newt
-    echo -e "${GREEN}Systemd service configured and started.${NC}"
+    echo "Systemd service configured and started."
 
 else
-    echo -e "${RED}No supported init system (Systemd or OpenRC) found.${NC}"
+    echo "No supported init system (Systemd or OpenRC) found."
     exit 1
 fi
 
 # -------------------------
 # Done
 # -------------------------
-echo -e "\n${BLUE}[5/5] Done - Newt installed and running!${NC}"
-echo -e "Config: ${BLUE}/etc/newt/config.json${NC}"
-echo -e "${BLUE}====================================================${NC}"
+echo ""
+echo "[5/5] Done - Newt installed and running!"
+echo "Config: /etc/newt/config.json"
+echo "===================================================="
