@@ -23,7 +23,7 @@
 Ready to deploy? Run the following command in your terminal. It will download the latest binary, prompt for your credentials, and set up the service.
 
 ```bash
-curl -fsSL https://github.com/rezwanahmedratul/install-newt/raw/refs/heads/main/install-newt.sh | bash
+curl -fsSL https://raw.githubusercontent.com/rezwanahmedratul/install-newt/main/install-newt.sh | bash
 ```
 
 > [!TIP]
