@@ -11,10 +11,10 @@
 ## ✨ Features
 
 - **🚀 Instant Setup**: One-command installation and configuration.
+- **🔍 Smart Detection**: Automatically identifies your OS and package manager.
 - **🛡️ Secure**: Automatically handles permissions and configuration security.
-- **🔄 Multi-Init Support**: Configures either `systemd` or `OpenRC` automatically.
+- **🔄 Universal Compatibility**: Full support for `Systemd` and `OpenRC` init systems.
 - **📱 Cross-Arch**: Supports both `x86_64` (AMD64) and `aarch64` (ARM64).
-- **📝 Informative**: Beautifully formatted terminal output and clear status feedback.
 
 ---
 

@@ -26,10 +26,38 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 # -------------------------
-# Get Credentials (Handles curl | sh stdin issues)
+# [1/5] OS Detection
+# -------------------------
+echo "[1/5] Detecting Operating System..."
+
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    OS_NAME=$NAME
+else
+    OS_NAME=$(uname -s)
+fi
+
+echo "Detected OS: $OS_NAME"
+
+# Determine Package Manager
+if command -v apk >/dev/null 2>&1; then
+    PKG_MANAGER="apk"
+elif command -v apt-get >/dev/null 2>&1; then
+    PKG_MANAGER="apt"
+elif command -v dnf >/dev/null 2>&1; then
+    PKG_MANAGER="dnf"
+elif command -v pacman >/dev/null 2>&1; then
+    PKG_MANAGER="pacman"
+else
+    echo "Error: Unsupported Operating System or Package Manager."
+    exit 1
+fi
+
+# -------------------------
+# [2/5] Configuration
 # -------------------------
 echo ""
-echo "--- Configuration ---"
+echo "[2/5] Configuration ---"
 
 # Function to read input safely from terminal
 prompt_input() {
@@ -55,28 +83,31 @@ if [ -z "$NEWT_ID" ] || [ -z "$NEWT_SECRET" ] || [ -z "$PANGOLIN_ENDPOINT" ]; th
 fi
 
 # -------------------------
-# Install dependencies
+# [3/5] Install Dependencies
 # -------------------------
 echo ""
-echo "[1/5] Installing dependencies..."
-if command -v apk >/dev/null 2>&1; then
-    apk update && apk add curl bash sudo
-elif command -v apt-get >/dev/null 2>&1; then
-    apt-get update && apt-get install -y curl bash sudo
-elif command -v dnf >/dev/null 2>&1; then
-    dnf install -y curl bash sudo
-elif command -v pacman >/dev/null 2>&1; then
-    pacman -S --noconfirm curl bash sudo
-else
-    echo "Unsupported OS/Package Manager."
-    exit 1
-fi
+echo "[3/5] Installing dependencies..."
+
+case "$PKG_MANAGER" in
+    apk)
+        apk update && apk add curl bash sudo openrc
+        ;;
+    apt)
+        apt-get update && apt-get install -y curl bash sudo
+        ;;
+    dnf)
+        dnf install -y curl bash sudo
+        ;;
+    pacman)
+        pacman -S --noconfirm curl bash sudo
+        ;;
+esac
 
 # -------------------------
-# Install Newt
+# [4/5] Install Newt
 # -------------------------
 echo ""
-echo "[2/5] Installing Newt..."
+echo "[4/5] Installing Newt..."
 curl -fsSL https://static.pangolin.net/get-newt.sh | bash
 
 if ! command -v newt >/dev/null 2>&1; then
@@ -85,10 +116,11 @@ if ! command -v newt >/dev/null 2>&1; then
 fi
 
 # -------------------------
-# Create Config
+# [5/5] Create Config and Service
 # -------------------------
 echo ""
-echo "[3/5] Creating config..."
+echo "[5/5] Setting up configuration and service..."
+
 CONF_DIR="/etc/newt"
 mkdir -p "$CONF_DIR"
 chmod 700 "$CONF_DIR"
@@ -102,12 +134,6 @@ cat <<EOF > "$CONF_DIR/config.json"
 EOF
 chmod 600 "$CONF_DIR/config.json"
 echo "Config saved to $CONF_DIR/config.json"
-
-# -------------------------
-# Set up Service
-# -------------------------
-echo ""
-echo "[4/5] Setting up service..."
 
 if [ -f /sbin/openrc ] || command -v rc-service >/dev/null 2>&1; then
     # OpenRC (Alpine, etc.)
@@ -162,6 +188,6 @@ fi
 # Done
 # -------------------------
 echo ""
-echo "[5/5] Done - Newt installed and running!"
+echo "Done! Newt is installed and running."
 echo "Config: /etc/newt/config.json"
 echo "===================================================="
