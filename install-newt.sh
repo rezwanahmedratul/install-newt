@@ -121,7 +121,7 @@ fi
 echo ""
 echo "[5/5] Setting up configuration and service..."
 
-CONF_DIR="/etc/newt"
+CONF_DIR="/root/.config/newt-client"
 mkdir -p "$CONF_DIR"
 chmod 700 "$CONF_DIR"
 
@@ -141,7 +141,6 @@ if [ -f /sbin/openrc ] || command -v rc-service >/dev/null 2>&1; then
 #!/sbin/openrc-run
 description="Newt - Pangolin Tunnel Client"
 command="/usr/local/bin/newt"
-command_args="-c /etc/newt/config.json"
 pidfile="/run/newt.pid"
 command_background="yes"
 
@@ -165,7 +164,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/newt -c /etc/newt/config.json
+ExecStart=/usr/local/bin/newt
 Restart=always
 RestartSec=5
 LimitNOFILE=65535
@@ -189,5 +188,5 @@ fi
 # -------------------------
 echo ""
 echo "Done! Newt is installed and running."
-echo "Config: /etc/newt/config.json"
+echo "Config: $CONF_DIR/config.json"
 echo "===================================================="

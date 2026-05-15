@@ -83,7 +83,7 @@ Once installed, you can manage the Newt service using standard commands for your
 The installer organizes files as follows:
 
 - **Binary**: `/usr/local/bin/newt`
-- **Config File**: `/etc/newt/config.json` (chmod 600)
+- **Config File**: `/root/.config/newt-client/config.json` (chmod 600)
 - **Service Unit**: `/etc/systemd/system/newt.service` or `/etc/init.d/newt`
 
 ---
