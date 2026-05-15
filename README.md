@@ -11,8 +11,8 @@
 ## ✨ Features
 
 - **🚀 Instant Setup**: One-command installation and configuration.
-- **🛡️ Secure**: Automatically handles environment variables and file permissions.
-- **🔄 Auto-Start**: Configures a `systemd` service for high availability.
+- **🛡️ Secure**: Automatically handles permissions and configuration security.
+- **🔄 Multi-Init Support**: Configures either `systemd` or `OpenRC` automatically.
 - **📱 Cross-Arch**: Supports both `x86_64` (AMD64) and `aarch64` (ARM64).
 - **📝 Informative**: Beautifully formatted terminal output and clear status feedback.
 
@@ -23,7 +23,7 @@
 Ready to deploy? Run the following command in your terminal. It will download the latest binary, prompt for your credentials, and set up the service.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/rezwanahmedratul/install-newt/main/install-newt.sh | bash
+curl -fsSL https://github.com/rezwanahmedratul/install-newt/raw/refs/heads/main/install-newt.sh | bash
 ```
 
 > [!TIP]
@@ -58,14 +58,23 @@ sudo NEWT_ID="your_id" NEWT_SECRET="your_secret" PANGOLIN_ENDPOINT="https://your
 
 ## 📊 Management & Logs
 
-Once installed, you can manage the Newt service using standard `systemctl` commands:
+Once installed, you can manage the Newt service using standard commands for your init system:
 
+### Systemd (Ubuntu, Debian, CentOS, etc.)
 | Action | Command |
 | :--- | :--- |
 | **Check Status** | `sudo systemctl status newt` |
 | **Restart Service** | `sudo systemctl restart newt` |
 | **Stop Service** | `sudo systemctl stop newt` |
 | **View Live Logs** | `sudo journalctl -u newt -f` |
+
+### OpenRC (Alpine, Gentoo, etc.)
+| Action | Command |
+| :--- | :--- |
+| **Check Status** | `sudo rc-service newt status` |
+| **Restart Service** | `sudo rc-service newt restart` |
+| **Stop Service** | `sudo rc-service newt stop` |
+| **View Logs** | `tail -f /var/log/messages` |
 
 ---
 
@@ -74,8 +83,8 @@ Once installed, you can manage the Newt service using standard `systemctl` comma
 The installer organizes files as follows:
 
 - **Binary**: `/usr/local/bin/newt`
-- **Environment Config**: `/etc/newt/newt.env` (chmod 600)
-- **Systemd Unit**: `/etc/systemd/system/newt.service`
+- **Config File**: `/etc/newt/config.json` (chmod 600)
+- **Service Unit**: `/etc/systemd/system/newt.service` or `/etc/init.d/newt`
 
 ---
 
