@@ -141,8 +141,8 @@ if [ -f /sbin/openrc ] || command -v rc-service >/dev/null 2>&1; then
 #!/sbin/openrc-run
 description="Newt - Pangolin Tunnel Client"
 command="/usr/local/bin/newt"
-pidfile="/run/newt.pid"
-command_background="yes"
+supervisor="supervise-daemon"
+respawn_delay=5
 
 depend() {
     need net
